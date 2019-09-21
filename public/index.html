@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Test sending location</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<link href="https://fonts.googleapis.com/css?family=Raleway:300,400,500,700" rel="stylesheet">
+</head>
+<body>
+
+<p>Click the button to get your coordinates.</p>
+
+<button onclick="getLocation()">Try It</button>
+
+<p id="demo"></p>
+
+<script>
+var x = document.getElementById("demo");
+
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition);
+  } else { 
+    x.innerHTML = "Geolocation is not supported by this browser.";
+  }
+}
+
+function showPosition(position) {
+  x.innerHTML = "Latitude: " + position.coords.latitude + 
+  "<br>Longitude: " + position.coords.longitude;
+  send_location(position.coords.latitude, position.coords.longitude);
+}
+
+function send_location(latitude, longitude){
+        //send user location to server
+        //event.preventDefault();
+		var data = {};
+		data.latitude = latitude;
+		data.longitude = longitude;
+		console.log('latitude is: ' + latitude);
+		console.log('longitude is: ' + longitude);
+
+		$.ajax({
+			type: 'POST',
+			data: JSON.stringify(data), //input data to be sent to the server
+			contentType: 'application/json',
+			url: '/requestlocation',                        
+			success: function(res) {	
+				console.log('success');
+				console.log(res);
+				$("#demo").html(res);  //summation displayed in the HTML page   				
+			}
+		});			
+}
+
+</script>
+
+</body>
+</html>
