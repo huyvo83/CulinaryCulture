@@ -4,9 +4,9 @@ var bodyParser = require("body-parser");
 require("dotenv").config();
 const axios = require("axios");
 var path = require('path');
-
-let near_by_call = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?&radius=1500&type=restaurant&key=' + process.env.GOOGLE_API_TOKEN ;
-
+let googlekey = process.env.GOOGLE_API_TOKEN;
+//let near_by_call = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?' ;
+let near_by_call = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?type=restaurant&key=' + process.env.GOOGLE_API_TOKEN ;
 app.use(bodyParser.json());
 app.use(
   bodyParser.urlencoded({
@@ -21,30 +21,30 @@ app.get('/', function(request, response){
 	
 });
 
-//sending verify message to user
-app.post('/requestlocation', function(req, res){	
-	console.log('/requestlocation');
-    var latitude = req.body.latitude; //received input 1 from client side
-	var longitude = req.body.longitude; //received input 2 from client side
-	sendLocation(latitude, longitude, near_by_call,res);	
+
+app.post('/findlocation', function(req, res){	
+	console.log('/findlocation');
+    let location = req.body.location; //received input 1 from client side
+	let keyword = req.body.keyword; //received input 2 from client side
+	let radius = req.body.radius; //received input 2 from client side
+	let userInput = location + keyword + radius;
+	findLocation(userInput, near_by_call,res);	
 	
 });
 
-
 //function to sendLocation to google server
-function sendLocation(latitude, longitude, call_url, res) {
-	console.log("in sendLocation");
-	var user_location = latitude + ',' + longitude;
-	console.log('user_location is: ' + user_location);
+function findLocation(userinput, call_url, res) {
+	console.log("in findLocation");
+	console.log('userinput is: ' + userinput);
+	call_url = call_url + userinput;
 	console.log('call_url is: ' + call_url);
-  axios.post(call_url, {
-    location: user_location    
-  }).then(response => {
-    console.log("Message posted");    
-	console.log(response.data);
-    res.end("ok");
+  axios.post(call_url).then(response => {
+    console.log("Message posted");  		
+	//console.log(response.data);
+    return res.end(JSON.stringify(response.data));
   })
   .catch(error =>{
+	  console.log('error');
     throw error;
   });
 }

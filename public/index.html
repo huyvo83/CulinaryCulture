@@ -3,55 +3,135 @@
 <head>
 	<title>Test sending location</title>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="reset.css" />	
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<link rel="stylesheet" type="text/css" href="popup.css" />
 	<link href="https://fonts.googleapis.com/css?family=Raleway:300,400,500,700" rel="stylesheet">
 </head>
 <body>
+<div class="flex-grid">
+	<div class="col"></div>
+	<div class="col_middle">
+		<p>Location:
+		<select id="myPlace">
+		  <option value="0">Places Near Me</option>
+		  <option value="-35.279790,149.133674">Canberra Centre</option>
+		  <option value="-35.250421,149.136690">Dickson</option>
+		  <option value="-35.238516,149.065203">Belconnen</option>
+		  <option value="-35.346010,149.085275">Woden</option>
+		  <option value="-35.4132462,149.0750259">Tuggeranong</option>
+		</select>
+		Radius:
+		<select id = "myRadius">
+		  <option value="&radius=1000">1000m</option>
+		  <option value="&radius=2000">2000m</option>
+		  <option value="&radius=3000">3000m</option>
+		  <option value="&radius=4000">4000m</option>
+		</select></p>
+		<p>Cuisine:
+		<select id = "myCuisine">
+		  <option value=""></option>
+		  <option value="&keyword=Korean">Korean</option>
+		  <option value="&keyword=Vietnamese">Vietnamese</option>
+		  <option value="&keyword=Italian">Italian</option>
+		  <option value="&keyword=Spanish">Spanish</option>
+		  <option value="&keyword=Australian">Australian</option>
+		  <option value="&keyword=Mexican">Mexican</option>  
+		</select></p>
 
-<p>Click the button to get your coordinates.</p>
+		<button id="btn_Find" onclick="find_place()">Find </button>
+		<div id="showResult"> 
+		
+		</div>
+	</div>
+	
+	
+	<div class="col">
 
-<button onclick="getLocation()">Try It</button>
+	</div>
+</div>  
 
-<p id="demo"></p>
 
 <script>
 var x = document.getElementById("demo");
+var user_location='';
+var findResult;
+navigator.geolocation = 1;
+navigator.geolocation.getCurrentPosition(getMyPosition);
 
-function getLocation() {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(showPosition);
-  } else { 
-    x.innerHTML = "Geolocation is not supported by this browser.";
-  }
+function getMyPosition(position){
+	let myposition = position.coords.latitude + ',' + position.coords.longitude;
+	console.log("myposition is :" + myposition);
+	user_location = myposition;
+	console.log("user_location is :" + user_location);
+	//return user_location;
 }
 
-function showPosition(position) {
-  x.innerHTML = "Latitude: " + position.coords.latitude + 
-  "<br>Longitude: " + position.coords.longitude;
-  send_location(position.coords.latitude, position.coords.longitude);
+function find_place(){
+	let myPlace = document.getElementById("myPlace").value;
+	let myRadius = document.getElementById("myRadius").value;
+	let myCuisine = document.getElementById("myCuisine").value;	
+	var data = {};
+	if (myPlace == 0 ){	
+		myPlace = user_location;
+	}	
+	data.location = "&location=" + myPlace;
+	data.keyword = myCuisine;	
+	data.radius = myRadius;
+	$.ajax({
+		type: 'POST',
+		data: JSON.stringify(data), //input data to be sent to the server
+		contentType: 'application/json',
+		url: '/findlocation',                        
+		success: function(res) {	
+			console.log('success');			
+			findResult = JSON.parse(res);			
+			console.log(findResult);			
+			for (let i = 0 ; i < findResult.results.length ; i++){				
+				let id_name = "result"+i;
+				let restaurant_Name = findResult.results[i].name;
+				// Create H3 heading with restaurant name
+				$('<h3/>')
+				.attr('id', 'id_name')
+				.append(restaurant_Name)
+				.css('cursor', 'pointer') //change cursor to pointer
+				.click(function(){
+					showPopup();
+					showEmbedMap(findResult.results[i].place_id);
+				})
+				.appendTo('#demo2');				
+			}		
+		}
+	});		
 }
 
-function send_location(latitude, longitude){
-        //send user location to server
-        //event.preventDefault();
-		var data = {};
-		data.latitude = latitude;
-		data.longitude = longitude;
-		console.log('latitude is: ' + latitude);
-		console.log('longitude is: ' + longitude);
-
-		$.ajax({
-			type: 'POST',
-			data: JSON.stringify(data), //input data to be sent to the server
-			contentType: 'application/json',
-			url: '/requestlocation',                        
-			success: function(res) {	
-				console.log('success');
-				console.log(res);
-				$("#demo").html(res);  //summation displayed in the HTML page   				
-			}
-		});			
+function showEmbedMap(place_id){
+	var Iframe_Open  = '<iframe width="600" height="450" frameborder="0" style="border:0" src="https://www.google.com/maps/embed/v1/place?key=AIzaSyBfEZy8-4n1bfWcL9haLlAjTioWvLZW_M4&q=place_id:';
+	var Iframe_Close = '"></iframe>';
+	$(".popup-inner-body").append(Iframe_Open + place_id + Iframe_Close);	
 }
 
+
+function showPopup(){ //create popup when click on the results list
+	var pop_outer = $('<div/>') //create a div right under body
+					.addClass('popup-outer-body')
+					.attr("data-popup","popup-embed-map")
+					.appendTo('body');
+	var close_icon = '<a class="popup-close" data-popup-close="popup-embed-map" href="#">x';
+	var pop_inner = $('<div/>')  //create inner popup
+					.addClass("popup-inner-body")
+					.append('<a class="popup-close" data-popup-close="popup-embed-map" href="#">x')
+					.appendTo($('.popup-outer-body'));
+	$(".popup-outer-body").fadeIn("slow");  
+	$('[data-popup-close]').on('click', function(e)  { //close function
+		e.preventDefault();
+		var targeted_popup_class = $(this).attr('data-popup-close');
+		$('[data-popup="' + targeted_popup_class + '"]').fadeOut(350);			
+		var x = setTimeout(function(){
+			$('.popup-outer-body').remove();
+		},500);
+		});
+}
 </script>
 
 </body>
