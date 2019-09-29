@@ -72,6 +72,9 @@ function find_place(){
 	let myRadius = document.getElementById("myRadius").value;
 	let myCuisine = document.getElementById("myCuisine").value;	
 	var data = {};
+	
+	//reset result list
+	$("#showResult").html("");
 	if (myPlace == 0 ){	
 		myPlace = user_location;
 	}	
@@ -86,21 +89,29 @@ function find_place(){
 		success: function(res) {	
 			console.log('success');			
 			findResult = JSON.parse(res);			
-			console.log(findResult);			
-			for (let i = 0 ; i < findResult.results.length ; i++){				
-				let id_name = "result"+i;
-				let restaurant_Name = findResult.results[i].name;
-				// Create H3 heading with restaurant name
+			console.log(findResult);	
+			if (findResult.results.length === 0) {
 				$('<h3/>')
-				.attr('id', 'id_name')
-				.append(restaurant_Name)
-				.css('cursor', 'pointer') //change cursor to pointer
-				.click(function(){
-					showPopup();
-					showEmbedMap(findResult.results[i].place_id);
-				})
-				.appendTo('#showResult');				
-			}		
+				.append("Sorry but please try again with larger radius")
+				.appendTo('#showResult');						
+			}
+			else
+			{
+				for (let i = 0 ; i < findResult.results.length ; i++){				
+					let id_name = "result"+i;
+					let restaurant_Name = findResult.results[i].name;
+					// Create H3 heading with restaurant name
+					$('<h3/>')
+					.attr('id', 'id_name')
+					.append(restaurant_Name)
+					.css('cursor', 'pointer') //change cursor to pointer
+					.click(function(){
+						showPopup();
+						showEmbedMap(findResult.results[i].place_id);
+					})
+					.appendTo('#showResult');				
+				}		
+			}
 		}
 	});		
 }
