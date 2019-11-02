@@ -60,4 +60,13 @@
 	overflow:auto;
 }
 
+@media screen and (max-width: 840px) {	
+	#btn-close{
+		display: inline-table;		
+	}
+	.popup-inner-body{
+		width:100%;
+		padding:0px;
+	}
+}
  

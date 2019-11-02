@@ -1,0 +1,7 @@
+folder	image count
+images/01/	12
+images/02/	10
+images/03/	11
+images/04/	6
+images/05/	14
+images/06/	14
